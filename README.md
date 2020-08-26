@@ -1,7 +1,8 @@
 # Embedded_daily_study (20.08.25 ~)
 <br>
 
-:pushpin: **20.08.25**
+### :pushpin: 20.08.25
+<hr>
 
 #### LPF
 - Low Pass Filter
