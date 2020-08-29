@@ -129,7 +129,6 @@
 
 - Multi Chip Package
 - 플래쉬 메모리 + RAM
-- 
 
 #### LSI
 
@@ -184,11 +183,145 @@
 - CU(Central Unit) : Decoder에게서 받아온 것을 각종 제어 신호로 변환하여 제어 신호를 발생시킴
 - ALU : 산술 연산 장치
 
+#### ARM Processor
+- Advanced RISC Machine
+- 32 bit RISC Processor, Big/Little Endian 지원, Fast interrupt response
+- register bank : 32bit 크기의 범용 register 31개, status register 6개가 묶여 있음.
+
+#### CISC
+- Complex Instruction Set Computer
+- 많은 수의 명령어와 데이터 형태, addressing 기법들을 모두 채택
+- chip의 크기가 크고, 명령어가 복잡, chip이 복잡하게 생김
+
+#### RISC
+- Reduced Instruction Set Computer
+- 많이 사용되는 명령어, 데이터 형태, addressing 기법 등을 모아 만든 단순한 micro processor
+- chip의 크기가 작아지고 단순해지고 전력소비가 줄어듦
+
 #### Pipeline
 - 하나의 명령어를 처리함에 있어서 병렬 처리가 가능하도록 함
 - 각각의 단계는 1 clock에 해당된다.
 - Fetch : 외부 메모리에서 명령어를 가져옴
 - Decode : 가져온 명령어를 해석 및 register 확인
 - Execution : 명령어 실행
+<br>
 
+## :pushpin: 20.08.27
 
+#### ARM Modes
+- Normal Mode : USR / Privileged Mode : SVC, SYS, IRQ, FIQ, UND, ABT
+- normal과 privileged 모드 차이점
+    + 특권 모드는 IRQ나 FIQ 등의 interrupt 사용 가능 유무를 직접 설정 가능.
+    + 또한, 특권 모드는 서로간의 모드 전환이 가능함. 특권 -> normal 가능. normal -> 특권은 불가능.
+- ARM의 default mode는 SVC -> boot up 때 ARM에 대한 모든 권한을 행사할 수 있음.
+- User : Normal Program execution mode
+- System : Run privileged operating system tasks
+- FIQ : When a high priority (fast) interrupt is raised
+- IRQ : When a low priority (normal) interrupt is raised
+- Supervisor : A protected mode for the operating system, entered when a SWI instruction is executed
+- Abort : Used to handle memory access violations
+- Undef : Used to handle undefined instructions
+
+#### ARM register와 context
+- ARM Processor의 register는 총 37개
+- R0~R15 (16개) + CPSR + banked register
+- Banked Register : 일반 사용자모드가 아니고, 슈퍼유저 모드일때 (특권 모드)일때 사용되는 register -> 각 mode별로 따로 사용하는 register
+- 모든 모드가 공유하는 register : R0~R7, PC, CPSR -> 얘네는 한 개씩 존재함
+
+#### CPSR
+- Current Program Status Register
+- 32 bit register
+- 28 ~ 31 bit : NZCV -> 연산한 후에 set되는 register
+    + N : 연산한 결과가 Negative
+    + Z : 연산한 결과가 0
+    + C : 연산 결과 carry 발생
+    + V : 연산 결과 overflow 발생
+- 7번째 bit : IRQ disable(1)/ enable(0)
+- 6번째 bit : FIQ disable(1)/ enable(0)
+- 5번째 bit : Thumb mode / Arm mode
+- 0~4 bit : 현재의 mode -> SYS와 USR은 mode bit만 차이나고 나머지는 같이 사용
+
+#### SPSR
+- Saved Program Status Register
+- CPSR을 복사해놓는 레지스터 -> 모드 전환 후 이전 모드로 돌아올 때 SPSR에 백업해둔 CPSR의 값을 다시 CPSR에 복사해서 전환함.
+
+#### R14 (LR) 
+- Linked Register
+- branch (jump) 할 때 어디에서 branch 해 왔는지 저장 -> 나중에 돌아갈 위치를 알 수 있음.
+
+#### R13 (SP)
+- Stack Pointer
+- 어디까지 stack을 쌓아 두었는지 알 수 있음.
+
+#### R15 (PC)
+- Program Counter
+- 실행하는 위치를 가리키고 있는게 아니라 현재 instruction을 fetch해 온 위치를 가리킴
+<br>
+
+## :pushpin: 20.08.28
+
+#### Context
+- register set의 snap shot 느낌
+- R0 ~ R15, CPSR의 값들을 보면 MCU의 현재 상황을 알 수 있음.
+- 다른 일을 하더라도 특정순간에 저장했던 Context를 다시 복원만 해줄 수 있다면 그 특정순간으로 돌아갈 수 있음
+
+#### ARM Exceptions
+- ARM은 발생하는 exception에 따라 mode가 변경됨
+- Exception vector table : exception 발생 시 pc를 jump 시켜야 하는 주소(exception vector)를 저장한 테이블
+- user 모드와 system 모드로 진입하는 exception은 없음. -> user 모드가 되면 다른 exception이 발생하지 않는 이상 다른 모드로 변경 불가
+- 위 2개의 모드는 전환하려면 CPSR의 mode bit를 직접 수정하면 됨, SPSR이 존재하지 않음. (얘네로 진입하는 exception이 없으니까 돌아갈 CPSR 값을 저장할 필요가 없음)
+
+#### Exception 우선순위
+1. Reset -> SVC
+2. Data abort -> ABT
+3. FIQ
+4. IRQ
+5. Prefetch abort -> ABT
+6. Undefined instruction -> UND
+7. SWI -> SVC
+
+#### Exception 발생 후 진행되는 순서 (ex. SVC -> IRQ)
+1. CPSR을 SPSR_irq에 복사
+2. CPSR의 mode를 IRQ로 변경, sp도 변경됨
+3. IRQ disable 설정, ARM mode로 변경
+4. R14_irq에 현재 PC값 저장 (돌아갈 주소)
+5. PC를 exception vector 값으로 저장
+6. R0 ~ R12를 R13_irq가 가리키는 스택에 저장
+7. 돌아갈 주소 보정 (LR에 아까 PC값 저장했으니까 sub lr, lr, #4 이렇게 보정) -> 현재 
+
+8. CPSR에 SPSR_irq 값을 넣음
+9. stack에 저장했던 register값들 복원
+10. PC에 R14_irq 값을 저장
+
+#### mode의 장점
+- 각 모드마다 register를 가지고 있으니까 각각의 mode를 적당히 사용하면 빠르게 전환이 가능함.
+- user 모드에서 IRQ로 전환 -> 레지스터 복사 필요없이 mode를 전환
+<br>
+
+## :pushpin: 20.08.29
+
+#### AAPCS
+- Procedure Call Standard for ARM Architecture
+- 레지스터들을 어떤 용도로 사용할 것인지 정해 놓은 규칙
+- R0 ~ R3 : Argument, Result, Scratch
+- R4 ~ R11 : variable -> 호출 된 함수가 해당 레지스터를 사용하려면 stack에 백업해두고 쓴 후에 다시 복원시켜서 return
+- R12 ~ R15 : Special
+  + R12 : IP (Intra) -> ARM-Thumb interworking 또는 long branch시에 Veneer를 통해 주소 할당 시에 임시 보관소로 사용함.
+  + R13 : SP (Stack Pointer)
+  + R14 : LR (Linked Register)
+  + R15 : PC (Program Counter)
+- 각 용도 별로 레지스터 개수가 더 필요하다면 stack에 저장함
+
+#### ARM - Interrupt
+- ISR : Interrupt Service Routine
+- interrupt가 발생하면 실행 주소가 exception vector 중에 IRQ나 FIQ로 변경되고, 그 vector에는 실제 handler로 브랜치 하기 위한 코드가 들어있음.
+- handler 내부에는 Interrupt가 여러 가지 종류가 있을 테니, 그 각각의 Interrupt에 따른 응답이 다름 -> 이게 ISR
+
+#### SoC
+- System on Chip
+- ARM이 core design만 팔다 보니, core에 여러 가지 기능을 덧붙여서 하나의 chip으로 만드는 기술 -> 이러한 구조가 SoC
+- ARM core를 바탕으로 웬만한 device들을 block화 해서 한 chip에 집어 넣겠다는 의미
+- 이런 각각의 기능을 가진 SoC내부의 block들을 IP (Intellectual Property)라고 함
+- MPU : Micro Processor Unit -> CPU의 성격이 강해서 외부 device들이 있어야 동작 가능
+- MCU : Micro Controller Unit -> Controller 성격이 강해서 CPU 이외의 것들이 모두 들어있어서 혼자 동작할 수 있음.
+- 둘 다 CPU의 기능이 들어있어서 굳이 구분할 필요는 없음.
