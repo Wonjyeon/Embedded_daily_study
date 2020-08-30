@@ -333,11 +333,20 @@
 - Advanced Microcontroller Bus Architecture -> SoC Target On-chip bus protocol
 - ARM에서 주도하는 Bus 규격 -> ARM을 SoC의 CPU로 사용하면 ARM의 성능을 최대화 하는 게 좋기 때문
 - Bus Interface : MCU 내부에서 Bus의 통신 방식을 잘 이해하고 지켜줄 수 있는 용도 -> Bus 위에 데이터를 어떻게 전송할 것인지, 어떻게 받을지 control함
-    + AHB : Advanced High performance Bus (ASB가 Multiplex bus로 진화된 형태 -> 더 빠름)
+    + AHB : Advanced High performance Bus (ASB에 burst mode가 추가됨)
     + ASB : Advanced System Bus
     + APB : Advanced Peripheral Bus
+    + AXI : Advanced eXtensible Interface
 - AHB Bus라고 한다면 AHB 프로토콜을 지원하는 Bus Interface에 물린 bus라고 생각하기
 - 각각의 IP는 Master와 Slave가 존재함
     + Master : slave인 IP에게 Read/Write 할 것을 명령
     + Slave : Master의 명령에 따라 행동하고 성공/실패/wait의 상태를 report함
 - Arbter : bus를 누가 쓸 것인지에 대한 결정권을 가지고 있음. -> 아비터가 허용해줘야 bus를 쓸 수 있는 것.
+- 실행 순서
+    1. bus를 쓰고 싶은 Master IP는 Arbter에게 HBUSREQ 신호를 날림 (bus 써도 될까?)
+    2. 신호를 받은 Arbter는 현재 bus를 쓰고 있는 IP가 없다면 HGRANT 신호를 전달 (그래. bus 써)
+    3. Master는 bus를 쓴다는 의미로 Arbter에게 HLOCKx 신호를 전달함. -> 아비터는 현재 어떤 애가 bus를 쓰고 있는지 기록.
+    4. 허가를 얻은 Master는 데이터를 전달하고자 하는 slave의 주소에 HADDR 신호를 전달함. Decoder는 그걸 보고선 HSELx 신호를 해당 slave에게 전달 -> slave 동작 활성화
+    5. Write하겠다는 의미로 Master는 slave에게 HWRITE 신호를 High로 날림 (Low면 Read하겠다는 의미)
+    6. slave는 준비됐다는 의미로 HREADY 신호를 Master에게 전달함
+    7. HWDATA 선에 데이터를 날려줌 (HRDATA bus를 통해서 read도 가능)
