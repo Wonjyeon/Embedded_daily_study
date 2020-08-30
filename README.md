@@ -325,3 +325,19 @@
 - MPU : Micro Processor Unit -> CPU의 성격이 강해서 외부 device들이 있어야 동작 가능
 - MCU : Micro Controller Unit -> Controller 성격이 강해서 CPU 이외의 것들이 모두 들어있어서 혼자 동작할 수 있음.
 - 둘 다 CPU의 기능이 들어있어서 굳이 구분할 필요는 없음.
+<br>
+
+## :pushpin: 20.08.30
+
+#### AMBA - SoC 안에서 IP끼리의 Bus 규격
+- Advanced Microcontroller Bus Architecture -> SoC Target On-chip bus protocol
+- ARM에서 주도하는 Bus 규격 -> ARM을 SoC의 CPU로 사용하면 ARM의 성능을 최대화 하는 게 좋기 때문
+- Bus Interface : MCU 내부에서 Bus의 통신 방식을 잘 이해하고 지켜줄 수 있는 용도 -> Bus 위에 데이터를 어떻게 전송할 것인지, 어떻게 받을지 control함
+    + AHB : Advanced High performance Bus (ASB가 Multiplex bus로 진화된 형태 -> 더 빠름)
+    + ASB : Advanced System Bus
+    + APB : Advanced Peripheral Bus
+- AHB Bus라고 한다면 AHB 프로토콜을 지원하는 Bus Interface에 물린 bus라고 생각하기
+- 각각의 IP는 Master와 Slave가 존재함
+    + Master : slave인 IP에게 Read/Write 할 것을 명령
+    + Slave : Master의 명령에 따라 행동하고 성공/실패/wait의 상태를 report함
+- Arbter : bus를 누가 쓸 것인지에 대한 결정권을 가지고 있음. -> 아비터가 허용해줘야 bus를 쓸 수 있는 것.
