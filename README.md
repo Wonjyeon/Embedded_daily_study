@@ -350,3 +350,31 @@
     5. Write하겠다는 의미로 Master는 slave에게 HWRITE 신호를 High로 날림 (Low면 Read하겠다는 의미)
     6. slave는 준비됐다는 의미로 HREADY 신호를 Master에게 전달함
     7. HWDATA 선에 데이터를 날려줌 (HRDATA bus를 통해서 read도 가능)
+
+<br>
+## :pushpin: 20.08.31
+
+#### Little Endian vs Big Endian
+- MSB : Most Significant Bit (맨 왼쪽 자리)
+- LSB : Least Significant Bit (맨 오른쪽 자리)
+    - 8진수 10010100
+    - 상위 2bit : MSB 2bit -> 10
+    - 하위 3bit : LSB 3bit -> 100
+- Little Endian : MSB를 상위 주소에 저장하고 있음. -> Processor는 software에서 정해준 type 크기 만큼 그대로 읽어와서 처리를 함
+- Big Endian : MSB를 하위 주소에 저장하고 있음. -> 낮은 주소부터 읽어와서 MSB에 저장
+        0x1000   0x1001   0x1002   0x1003
+Big     0x12     0x34     0x56     0x78
+Little  0x78     0x56     0x34     0x12
+- ARM의 경우 Big, Little endian 모두 지원하지만 default는 little!
+- compile 할 때 option으로 변경 가능함.
+
+#### 컴파일에 대한 단상
+- C와 같은 high level 언어로 코딩 -> 내가 동작시키고자 하는 processor에 맞는 C compiler를 이용해서 그 processor에서 동작 가능한 assembly를 만드는 것
+- 크로스 컴파일 : 실제 target에서 돌아갈 binary image를 PC상에서 컴파일 할 수 있게 해주는 환경
+    - PC에서 컴파일한 것은 PC에서 실행하는 게 정상인데, 임베디드 시스템에서는 target 자체에서 컴파일을 수행하기에 너무 작은 시스템이며, 불편하기 때문
+
+#### 컴파일 공장 이야기
+- 소스 파일들을 C 컴파일러(tcc, armcc)를 이용하여 어셈블리로 만들고, 어셈블러 (armasm)을 이용하여 실행 가능하고, symbol 정보를 가진 특정한 type(elf : Excutable and linkable format)으로 만든 후, 그 안에 있는 native code(기계어)인 binary를 뽑아낸다.
+- link : 여러 개의 .c file -> assembly -> object -> 이 object 파일들을 연결하는 것
+- source files -> |C compiler(전처리 후)| -> assembly codes -> |Assembler| -> object files -> |Linker| -> elf
+- 
