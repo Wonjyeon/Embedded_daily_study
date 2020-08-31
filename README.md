@@ -350,8 +350,8 @@
     5. Write하겠다는 의미로 Master는 slave에게 HWRITE 신호를 High로 날림 (Low면 Read하겠다는 의미)
     6. slave는 준비됐다는 의미로 HREADY 신호를 Master에게 전달함
     7. HWDATA 선에 데이터를 날려줌 (HRDATA bus를 통해서 read도 가능)
-
 <br>
+
 ## :pushpin: 20.08.31
 
 #### Little Endian vs Big Endian
@@ -377,4 +377,3 @@ Little  0x78     0x56     0x34     0x12
 - 소스 파일들을 C 컴파일러(tcc, armcc)를 이용하여 어셈블리로 만들고, 어셈블러 (armasm)을 이용하여 실행 가능하고, symbol 정보를 가진 특정한 type(elf : Excutable and linkable format)으로 만든 후, 그 안에 있는 native code(기계어)인 binary를 뽑아낸다.
 - link : 여러 개의 .c file -> assembly -> object -> 이 object 파일들을 연결하는 것
 - source files -> |C compiler(전처리 후)| -> assembly codes -> |Assembler| -> object files -> |Linker| -> elf
-- 
